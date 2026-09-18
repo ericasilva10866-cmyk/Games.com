@@ -1,1 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo da Cobrinha Viciante</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #111;
+            color: #fff;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+        #placa {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+        canvas {
+            background: #222;
+            border: 4px solid #4CAF50;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(76,175,80,0.3);
+        }
+        .controles {
+            display: grid;
+            grid-template-columns: repeat(3, 70px);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            background: #333;
+            border: 2px solid #4CAF50;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            text-align: center;
+            user-select: none;
+        }
+        .btn:active { background: #4CAF50; transform: scale(0.95); }
+        .btn-cima { grid-column: 2; }
+        .btn-esq { grid-column: 1; grid-row: 2; }
+        .btn-dir { grid-column: 3; grid-row: 2; }
+        .btn-baixo { grid-column: 2; grid-row: 2; }
+    </style>
+</head>
+<body>
+    <div id="placa">Pontos: 0</div>
+    <canvas id="jogo" width="300" height="300"></canvas>
+    <div class="controles">
+        <div class="btn btn-cima" id="btn-cima">↑</div>
+        <div class="btn btn-esq" id="btn-esq">←</div>
+        <div class="btn btn-baixo" id="btn-baixo">↓</div>
+        <div class="btn btn-dir" id="btn-dir">→</div>
+    </div>
+
+    <script>
+        const tela = document.getElementById('jogo');
+        const pincel = tela.getContext('2d');
+        const placa = document.getElementById('placa');
+
+        const tamanho = 15;
+        let cobra = [{x: 150, y: 150}];
+        let direcao = {x: tamanho, y: 0};
+        let comida = novaComida();
+        let pontos = 0;
+
+        function novaComida() {
+            return {
+                x: Math.floor(Math.random() * (tela.width/tamanho)) * tamanho,
+                y: Math.floor(Math.random() * (tela.height/tamanho)) * tamanho
+            };
+        }
+
+        function desenhar() {
+            pincel.fillStyle = '#222';
+            pincel.fillRect(0, 0, tela.width, tela.height);
+
+            pincel.fillStyle = '#4CAF50';
+            cobra.forEach(p => pincel.fillRect(p.x, p.y, tamanho-1, tamanho-1));
+
+            pincel.fillStyle = '#ff4444';
+            pincel.fillRect(comida.x, comida.y, tamanho-1, tamanho-1);
+        }
+
+        function andar() {
+            const cabeca = {
+                x: cobra[0].x + direcao.x,
+                y: cobra[0].y + direcao.y
+            };
+
+            if (cabeca.x < 0) cabeca.x = tela.width - tamanho;
+            if (cabeca.y < 0) cabeca.y = tela.height - tamanho;
+            if (cabeca.x >= tela.width) cabeca.x = 0;
+            if (cabeca.y >= tela.height) cabeca.y = 0;
+
+            if (cobra.some(p => p.x === cabeca.x && p.y === cabeca.y)) {
+                alert('Fim de Jogo! Pontos: ' + pontos);
+                cobra = [{x: 150, y: 150}];
+                direcao = {x: tamanho, y: 0};
+                pontos = 0;
+                comida = novaComida();
+                return;
+            }
+
+            cobra.unshift(cabeca);
+
+            if (cabeca.x === comida.x && cabeca.y === comida.y) {
+                pontos++;
+                placa.textContent = 'Pontos: ' + pontos;
+                comida = novaComida();
+            } else {
+                cobra.pop();
+            }
+        }
+
+        document.getElementById('btn-cima').onclick = () => {
+            if (direcao.y === 0) direcao = {x: 0, y: -tamanho};
+        };
+        document.getElementById('btn-baixo').onclick = () => {
+            if (direcao.y === 0) direcao = {x: 0, y: tamanho};
+        };
+        document.getElementById('btn-esq').onclick = () => {
+            if (direcao.x === 0) direcao = {x: -tamanho, y: 0};
+        };
+        document.getElementById('btn-dir').onclick = () => {
+            if (direcao.x === 0) direcao = {x: tamanho, y: 0};
+        };
+
+        document.onkeydown = (e) => {
+            if (e.key === 'ArrowUp' && direcao.y === 0) direcao = {x: 0, y: -tamanho};
+            if (e.key === 'ArrowDown' && direcao.y === 0) direcao = {x: 0, y: tamanho};
+            if (e.key === 'ArrowLeft' && direcao.x === 0) direcao = {x: -tamanho, y: 0};
+            if (e.key === 'ArrowRight' && direcao.x === 0) direcao = {x: tamanho, y: 0};
+        };
+
+        function loop() {
+            andar();
+            desenhar();
+        }
+        setInterval(loop, 150);
+    </script>
+</body>
+</html>
 
